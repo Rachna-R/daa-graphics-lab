@@ -31,9 +31,12 @@ int sign(int x)                                           //to determine the sig
 	return((x > 0) ? 1 : ((x < 0) ? -1 : 0));
 }
 
-void setPixelLine(float x, float y)                      //function to plot the points obtained from bressenham's algorithm
+void setPixelLine(float x, float y, int col)                      //function to plot the points obtained from bressenham's algorithm
 { 	
-	glColor3f(0.8, 0.0, 0.0 );
+	if(col == 0)	
+		glColor3f(0.8, 0.0, 0.0 );
+	else
+		glColor3f(0.0, 1.0, 0.0);
 	glBegin(GL_POINTS);
 	glVertex2f(x,y);
 	glEnd();
@@ -148,7 +151,7 @@ void printAdjMatrix()
 	adjMatrix[col][row] = weight;			            
 }
 
-void bressenham(int x2, int y2, int x3, int y3, int slope)   //Bressenham's line drawing algorithm
+void bressenham(int x2, int y2, int x3, int y3, int slope, int col)   //Bressenham's line drawing algorithm
 {
 	int dx, dy, dx2, dy2, x, y, s1, s2, p;
 	if(slope == 2)                                       //if slope is negative, exchange x and y for both endpoints
@@ -178,9 +181,9 @@ void bressenham(int x2, int y2, int x3, int y3, int slope)   //Bressenham's line
 	for(int i = 0; i <= dx; i++)
 	{
 		if( slope == 1)
-			setPixelLine(x, y);
+			setPixelLine(x, y, col);
 		else
-			setPixelLine(y, x);
+			setPixelLine(y, x, col);
 		x = x + s1;
 		if(p >= 0)
 		{
@@ -216,7 +219,7 @@ void drawCircleLine()
 		{                      		// to determine the number of times clicked to draw an edge
 			printAdjMatrix();
 		}	
-		bressenham(xLine[i], yLine[i], xLine[i+1], yLine[i+1], slope);
+		bressenham(xLine[i], yLine[i], xLine[i+1], yLine[i+1], slope, 0);
 	}
 	midPointCircle();
 }
@@ -247,6 +250,19 @@ void relax(int u, int v, int weight)
 	}
 } 
 
+void drawEdge(int nodei, int nodej)
+{
+	color[nodei] = 2;
+	color[nodej] = 2;	
+	int slope;
+	if(abs(xc[nodej] - xc[nodei]) > abs(yc[nodej] - yc[nodei]))      //to determine the sign of slope
+			slope = 1;
+		else
+			slope = 2;
+	bressenham(xc[nodei], yc[nodei], xc[nodej], yc[nodej], slope, 1);
+}
+
+
 void dijkstra(int startNode)
 {	
 	int x = 0, k = 0;
@@ -260,8 +276,6 @@ void dijkstra(int startNode)
 	while(front <= rear)
 	{
 		front++;
-		drawCircleLine();
-		//array1();
 		int u = queue[front];
 		x++;
 		for(int v = 0; v < nodeCount; v++)
@@ -275,18 +289,18 @@ void dijkstra(int startNode)
 				arr[v] = distanceNode[v];
 				//queue[++rear] = v;
 			} 
-			drawCircleLine();
 			sleep(1.0);
 		}
 		if( x >= nodeCount)
 			break;
-		u = sort(arr);
-		arr[u] = 0;                                        //the node has been traversed
-		queue[++rear] = u;
-		arr1[k++] = u;
-		color[u] = 2;
-		sprintf(ch, "%d", u);
-		drawString(xc[u]-3, yc[u]-35, ch);
+		int p = sort(arr);
+		arr[p] = 0;                                        //the node has been traversed
+		queue[++rear] = p;
+		arr1[k++] = p;
+		drawEdge(u, p);
+		color[p] = 2;
+		sprintf(ch, "%d", p);
+		drawString(xc[p]-3, yc[p]-35, ch);
 		//cout << " " << u << " ";
 	}
 	for(int i = 0; i < nodeCount; i++)
@@ -393,7 +407,7 @@ void init()
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
 	glutInitWindowPosition(50,50);
 	glutInitWindowSize(800, 500);
-	glutCreateWindow("Breadth First Search");
+	glutCreateWindow("Dijkstra's Algorithm");
 	glClear(GL_COLOR_BUFFER_BIT);	
 	glClearColor(1.0, 1.0, 1.0, 0);
 	glColor3f(1.0, 1.0, 1.0);
@@ -407,8 +421,6 @@ int main(int argc, char **argv)
 	cin >> nodeCount;
 	cout << "\nEnter the starting node : ";
 	cin >> startNode;
-	//cout << "\nEnter the number of edges : ";
-	//cin >> edgeCount;
 	initAdjMatrix();
 	
 	initializeSingleSource(startNode);
