@@ -19,13 +19,6 @@ int slope = 2, nodeCount, arr[10],flag = 0, arr1[10];
 int adjMatrix[10][10], startNode, queue[10], front = -1, rear = -1, color[3], parent[10], distanceNode[10], v1, v2, adjmat[10][10];
 bool wait = false;
 
-struct Color                                               // Structure which stores the RGB values
-{
-    GLfloat r;
-    GLfloat g;
-    GLfloat b;
-};
-
 int sign(int x)                                           //to determine the sign, used in bressenham's function
 {
 	return((x > 0) ? 1 : ((x < 0) ? -1 : 0));
@@ -65,43 +58,6 @@ Color getPixelColor(GLint x, GLint y)                           //Function to re
 	return color;                                           //return the color in rgb values
 }
 
-/*void floodFill( int x, int y, int borderColor )
-{
-	Color color = getPixelColor( x, y );	              //variable color contains the color of the current pixel
-	Color fillColor;
-	if ( borderColor == 0 )                               //if borderColor is 0, then it is white
-	{
-		fillColor.r = 1;
-		fillColor.g = 1;
-		fillColor.b = 1;
-	}
-	else if ( borderColor == 1 )                         //if borderColor is 1, then it is gray
-	{
-		fillColor.r = 0.5;
-		fillColor.g = 0.5;
-		fillColor.b = 0.5;
-	}
-	else                                                  //if bordeColor is 2, then it is black
-	{
-		fillColor.r = 0;
-		fillColor.g = 1;
-		fillColor.b = 0;
-	}
-	if(!(abs(color.r - fillColor.r) < 0.1 && abs( color.g - fillColor.g) < 0.1 && abs( color.b - fillColor.b) < 0.1))  //checks if the fill color is the same as the borderColor
-	{
-	        glColor3f ( fillColor.r, fillColor.g, fillColor.b );
-	        glBegin( GL_POINTS );
-	        	glVertex2i( x, y );
-	        glEnd();
-	        glFlush();
-	        floodFill(x+1, y, borderColor);                      //calls the fillColor function recursively to fill the entire circle
-	        floodFill(x, y+1, borderColor);
-	        floodFill(x-1, y, borderColor);
-	        floodFill(x, y-1, borderColor);
-	}
-	return;	
-}*/
-
 void midPointCircle()
 {
 	float p, x, y;
@@ -130,10 +86,6 @@ void midPointCircle()
 		circlePlotPoints(y, x);
 		glFlush();
 	}
-	/*for ( int i = 0; i < nodesDrawn; i++ )
-	{	
-		floodFill( xc[i], yc[i] , color[i] );      //calls the floodfill to fill the circle
-	}*/
 }
 
 void drawString(int x, int y, char *str)
@@ -265,33 +217,55 @@ void drawEdge(int nodei, int nodej)
 
 void dijkstra(int startNode)
 {	
-	int x = 0, k = 0;
+	int x = 0, k = 0, isolatedNodes[10], q = 1;
 	char ch[5];
 	if(rear == -1)	
 		rear = 0;
 	else
 		rear++;
 	queue[rear] = startNode; 
-	arr1[k++] = startNode;                					//insert the startNode to the queue
+	arr1[k++] = startNode; 
+	int  r = 0, c = 0;
+	for(int i = 0; i < nodeCount; i++)
+	{
+		for(int j = 0; j < nodeCount; j++)
+		{
+			if(adjMatrix[i][j] != 0)
+			{
+				r = 1;
+				break;
+			}
+			else
+				c++;	
+		}
+		if(c < nodeCount)
+			continue;
+		else
+		{
+			isolatedNodes[q++] = i;
+			break;
+		}
+	}
+	q = q - 1;					//insert the startNode to the queue
 	while(front <= rear)
 	{
 		front++;
+		if(front == nodeCount - q)
+			break;
 		int u = queue[front];
 		x++;
 		for(int v = 0; v < nodeCount; v++)
 		{
-
-			if( x >= nodeCount)                                    //if x = nodeCount, all nodes have been traversed
+			if( x >= nodeCount - q)                                    //if x = nodeCount, all nodes have been traversed
 				break;
 			if(adjMatrix[u][v] > 0 && color[v] == 0)
 			{
 				relax(u, v, adjMatrix[u][v]);
 				arr[v] = distanceNode[v];
-				//queue[++rear] = v;
-			} 
-			sleep(1.0);
+			}
+			sleep(0.5);
 		}
-		if( x >= nodeCount)
+		if( x >= nodeCount - q )
 			break;
 		int p = sort(arr);
 		arr[p] = 0;                                        //the node has been traversed
@@ -301,9 +275,8 @@ void dijkstra(int startNode)
 		color[p] = 2;
 		sprintf(ch, "%d", p);
 		drawString(xc[p]-3, yc[p]-35, ch);
-		//cout << " " << u << " ";
 	}
-	for(int i = 0; i < nodeCount; i++)
+	for(int i = 0; i < nodeCount - q ; i++)
 		cout << arr1[i] << " ";
 }
 
@@ -329,7 +302,6 @@ void mouse(int button, int state, int x, int y)
 					cout << adjMatrix[i][j] << " ";
 				cout << endl;
 			}
-			//bfs(startNode);
 		}
 	}
 	if(state == GLUT_DOWN && button == GLUT_RIGHT_BUTTON)                //if a right-click occured
@@ -365,7 +337,6 @@ void mouse(int button, int state, int x, int y)
 
 void keyboardPress(unsigned char key, int x, int y)
 {
-	//flag = 1;
 	cout << "\nThe order of traversal is : \n";
 	switch(key)
 	{
@@ -382,7 +353,6 @@ void initAdjMatrix()                                   //initialize adjacency ma
 		for(int j = 0; j < 10; j++)
 		{
 			adjMatrix[i][j] = 0;
-			//adjmat[i][j] = 0;
 		}
 		arr1[i] = 0;
 	}
@@ -412,7 +382,6 @@ void init()
 	glClearColor(1.0, 1.0, 1.0, 0);
 	glColor3f(1.0, 1.0, 1.0);
 	gluOrtho2D(0, 800, 0, 500);
-	//initAdjMatrix();
 }
 
 int main(int argc, char **argv)
@@ -422,7 +391,6 @@ int main(int argc, char **argv)
 	cout << "\nEnter the starting node : ";
 	cin >> startNode;
 	initAdjMatrix();
-	
 	initializeSingleSource(startNode);
 	glutInit(&argc, argv);
 	init();
@@ -432,3 +400,5 @@ int main(int argc, char **argv)
 	glutMainLoop();
 	return 0;
 }
+
+/*  ----------END OF PROGRAM------------ */
