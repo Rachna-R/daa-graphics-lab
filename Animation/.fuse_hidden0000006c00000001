@@ -1,0 +1,187 @@
+#include<iostream>
+#include<stdio.h>
+#include<GL/glut.h>
+#include<math.h>
+#include<unistd.h>
+#include<GL/gl.h>
+
+using namespace std;
+
+float x3 = 10, y3 = 110, x2 = 35, y2 = 125;
+bool rightMove = false;
+int radius = 5, xc[1000], yc[1000], q=0;
+
+void draw()
+{
+	glPointSize(1.0);
+	glColor3f(1.0, 1.0, 1.0);
+	glBegin(GL_LINES);
+		glVertex2i(0, 100);
+		glVertex2i(800, 100);
+	glEnd();
+
+	glBegin(GL_LINES);
+		glVertex2i(400, 100);
+		glVertex2i(400, 200);
+	glEnd();
+
+	glBegin(GL_LINES);
+		glVertex2i(100, 100);
+		glVertex2i(100, 150);
+	glEnd();
+
+	glFlush();
+}
+
+void drawRect()
+{
+	//cout << "\nIn drawRect";
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+	glBegin(GL_QUADS);
+		glVertex2i(x2, y2);
+		glVertex2i(x2, y3);
+		glVertex2i(x3, y3);
+		glVertex2i(x3, y2);
+	glEnd();
+	//xc[q++] = x2 + 5;
+	//drawCircle();
+	//drawCircle();
+	//xc[q++] = x2 + 10;
+	draw();
+}
+
+void drawString(int x, int y, char *str)
+{
+	glColor3f(0.8, 0.0, 0.0);
+	glRasterPos2i(x, y);
+	for( str; *str != '\0'; str++ )
+		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_10, *str);
+}
+
+void yUpward()
+{
+	//if(rightMove == true)
+	//{
+		cout << "\n In yUP";
+		y2 += 5;
+		y3 += 5;
+		x2 += 3;
+		x3 += 3;
+		cout << "x2 = " << x2 << " y2 = " << y2 << endl;
+		cout << "x3 = " << x3 << " y3 = " << y3 << endl;
+		if(y2 > 200)
+		{
+			cout << "\nIn YU in if";
+			x2 += 4;
+			x3 += 4;
+		}
+		/*if(x2 > 400 && x2 < 415 && y2 < 200) 
+		{
+			char ch[10] = "You Lose";
+			drawString(400, 100, ch);
+		}
+		else
+		{
+			drawRect();
+		}*/
+		drawRect();
+	//}
+}
+
+void xForward()
+{
+	//if(rightMove == true)
+	//{
+		//cout << "\nIn xForward";
+		
+		x2 += 0.01; 
+		x3 += 0.01;
+		if(x2 == 385)
+		{
+			cout << "In XF in if" << endl;
+			yUpward();
+		}
+		drawRect();
+	//}
+	
+}
+
+void forward()
+{
+	while(x2 < 800)
+		xForward();
+}
+
+void yDownward()
+{
+	if(rightMove == true)
+	{
+		while(y2 != 125 && y3 != 110)
+		{
+			y2 -= 5;
+			y3 -= 5;
+			drawRect();
+		}
+	}
+	else
+	{
+		y2 = 125; 
+		y3 = 110;
+	}
+}
+
+void mouse(int button, int state, int x, int y)
+{
+	if(state == GLUT_DOWN && button == GLUT_LEFT_BUTTON)
+	{
+		if(rightMove == false)
+		{
+			rightMove = true;
+			drawRect();
+		}
+		cout << "\nX = " << x << "Y = " << (500 - y) ;
+	}
+	else if(state == GLUT_UP && button == GLUT_RIGHT_BUTTON)
+	{
+		//stop();
+	}
+}
+
+void keyboardPress(unsigned char key, int x, int y)
+{
+	switch(key)
+	{
+		case 'd' : //xForward();
+					forward();
+				break;
+		//case 'w' : yUpward();
+		//		break;
+		case 's' : yDownward();
+				break;
+		default : cout << "\nUnknown Key" << endl;
+	}
+}
+
+void init()
+{
+	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
+	glutInitWindowPosition(50, 50);
+	glutInitWindowSize(800, 500);
+	glutCreateWindow("Animation");
+	glClear(GL_COLOR_BUFFER_BIT);
+	glClearColor(0.0, 0.0, 0.0, 0);
+	glColor3f(1.0, 1.0, 1.0);
+	gluOrtho2D(0, 800, 0, 300);
+}
+
+int main(int argc, char **argv)
+{
+	glutInit(&argc, argv);
+	init();
+	glutMouseFunc(mouse);
+	glutKeyboardFunc(keyboardPress);
+	glutDisplayFunc(draw);
+	glutMainLoop();
+	return 0;
+}
